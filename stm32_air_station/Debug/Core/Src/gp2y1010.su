@@ -1,0 +1,5 @@
+../Core/Src/gp2y1010.c:15:13:delay_us	24	static,ignoring_inline_asm
+../Core/Src/gp2y1010.c:34:6:GP2Y_Init	8	static
+../Core/Src/gp2y1010.c:43:7:GP2Y_CalibrateBaseline	24	static
+../Core/Src/gp2y1010.c:62:6:GP2Y_Read	24	static
+../Core/Src/gp2y1010.c:109:13:GP2Y_GetQualityString	16	static

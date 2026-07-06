@@ -1,0 +1,8 @@
+../Core/Src/mq_sensors.c:22:10:MQ_ReadADC	40	static
+../Core/Src/mq_sensors.c:44:7:MQ_ADC_to_Voltage	16	static
+../Core/Src/mq_sensors.c:54:7:MQ_Voltage_to_Rs	24	static
+../Core/Src/mq_sensors.c:62:19:MQ_Init	16	static
+../Core/Src/mq_sensors.c:75:6:MQ2_Read	16	static
+../Core/Src/mq_sensors.c:96:6:MQ9_Read	16	static
+../Core/Src/mq_sensors.c:117:6:MQ135_Read	16	static
+../Core/Src/mq_sensors.c:152:7:MQ_Calibrate_R0	48	static

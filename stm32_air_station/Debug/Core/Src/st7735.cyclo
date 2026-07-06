@@ -1,0 +1,12 @@
+../Core/Src/st7735.c:121:13:ST7735_WriteCmd	1
+../Core/Src/st7735.c:129:13:ST7735_WriteData	1
+../Core/Src/st7735.c:137:13:ST7735_WriteData8	1
+../Core/Src/st7735.c:143:13:ST7735_SetAddrWindow	1
+../Core/Src/st7735.c:163:6:ST7735_Init	1
+../Core/Src/st7735.c:196:6:ST7735_DrawPixel	3
+../Core/Src/st7735.c:204:6:ST7735_FillRect	7
+../Core/Src/st7735.c:227:6:ST7735_FillScreen	1
+../Core/Src/st7735.c:232:6:ST7735_DrawHLine	1
+../Core/Src/st7735.c:237:6:ST7735_DrawVLine	1
+../Core/Src/st7735.c:245:6:ST7735_DrawChar	9
+../Core/Src/st7735.c:269:6:ST7735_DrawString	3

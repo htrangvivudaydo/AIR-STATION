@@ -1,0 +1,7 @@
+../Core/Src/air_quality.c:27:6:AirStation_Init	24	static
+../Core/Src/air_quality.c:68:6:Task_SensorRead	136	static
+../Core/Src/air_quality.c:112:17:aqi_color	16	static
+../Core/Src/air_quality.c:125:16:eval_level	32	static
+../Core/Src/air_quality.c:135:16:AirStation_OverallLevel	24	static
+../Core/Src/air_quality.c:175:6:Task_DisplayUpdate	168	static
+../Core/Src/air_quality.c:277:6:Task_UART_Report	472	static

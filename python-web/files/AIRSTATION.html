@@ -1,0 +1,273 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Air Station — Giám sát không khí thông minh</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;700&family=Be+Vietnam+Pro:wght@400;600;700&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg:        #0c0f14;
+      --card:      #151921;
+      --border:    #1e2430;
+      --text:      #c8cdd5;
+      --dim:       #5a6270;
+      --green:     #22c55e;
+      --yellow:    #eab308;
+      --orange:    #f97316;
+      --red:       #ef4444;
+      --purple:    #a855f7;
+      --cyan:      #06b6d4;
+    }
+
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+
+    body {
+      font-family: 'Be Vietnam Pro', sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      min-height: 100vh;
+      padding: 20px;
+    }
+
+    .header { text-align: center; padding: 20px 0 10px; }
+    .header h1 { font-family: 'JetBrains Mono', monospace; font-size: 1.6rem; letter-spacing: 3px; text-transform: uppercase; color: var(--cyan); }
+    .header .status { font-size: 0.8rem; color: var(--dim); margin-top: 6px; }
+    .header .status .dot { display: inline-block; width: 8px; height: 8px; border-radius: 50%; background: var(--green); margin-right: 4px; animation: blink 2s infinite; }
+    @keyframes blink { 0%, 100% { opacity: 1; } 50% { opacity: 0.3; } }
+
+    /* ---- OVERALL BANNER ---- */
+    .overall { max-width: 700px; margin: 20px auto; padding: 18px 24px; border-radius: 12px; border: 1px solid var(--border); background: var(--card); display: flex; align-items: center; justify-content: space-between; gap: 16px; }
+    .overall .label { font-size: 0.85rem; color: var(--dim); text-transform: uppercase; letter-spacing: 1px; }
+    .overall .level-text { font-family: 'JetBrains Mono', monospace; font-size: 1.5rem; font-weight: 700; }
+    .overall .level-bar { flex: 1; height: 8px; background: #1e2430; border-radius: 4px; overflow: hidden; margin: 0 12px; }
+    .overall .level-fill { height: 100%; border-radius: 4px; transition: width 0.8s ease, background 0.8s ease; }
+
+    /* ---- SENSOR GRID ---- */
+    .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 14px; max-width: 700px; margin: 16px auto; }
+    .card { background: var(--card); border: 1px solid var(--border); border-radius: 10px; padding: 16px; position: relative; overflow: hidden; transition: border-color 0.3s; }
+    .card:hover { border-color: #2a3040; }
+    .card .name { font-size: 0.75rem; color: var(--dim); text-transform: uppercase; letter-spacing: 1px; margin-bottom: 8px; }
+    .card .value { font-family: 'JetBrains Mono', monospace; font-size: 1.8rem; font-weight: 700; line-height: 1; }
+    .card .unit { font-size: 0.75rem; color: var(--dim); margin-left: 4px; }
+    .card .bar { margin-top: 12px; height: 4px; background: #1e2430; border-radius: 2px; overflow: hidden; }
+    .card .bar-fill { height: 100%; border-radius: 2px; transition: width 0.6s ease, background 0.6s ease; }
+
+    /* ---- AI ANALYSIS BAR ---- */
+    .ai-section { max-width: 700px; margin: 16px auto; padding: 16px; background: var(--card); border: 1px solid var(--border); border-radius: 10px; }
+    .ai-title { font-size: 0.85rem; color: var(--cyan); text-transform: uppercase; margin-bottom: 12px; font-weight: bold; display: flex; justify-content: space-between; align-items: center;}
+    .ai-status-text { font-size: 0.7rem; color: var(--dim); font-weight: normal; text-transform: none; }
+    
+    .color-line { width: 100%; height: 12px; border-radius: 6px; position: relative; margin: 24px 0; background: linear-gradient(to right, #22c55e 0%, #eab308 50%, #ef4444 100%); }
+    .indicator { position: absolute; top: -6px; width: 6px; height: 24px; background: #fff; border-radius: 3px; box-shadow: 0 0 5px rgba(0,0,0,0.5); transition: left 0.8s ease-in-out; left: 0%; }
+    .ai-msg { font-size: 0.95rem; line-height: 1.5; color: #fff; border-left: 3px solid var(--cyan); padding-left: 10px; margin-bottom: 14px; }
+
+    #btnAskAI { padding: 8px 16px; background: var(--cyan); border: none; border-radius: 6px; color: #0c0f14; font-weight: bold; cursor: pointer; transition: opacity 0.2s; font-family: 'Be Vietnam Pro', sans-serif; }
+    #btnAskAI:hover { opacity: 0.9; }
+
+    .footer { text-align: center; padding: 24px; font-size: 0.75rem; color: var(--dim); }
+  </style>
+</head>
+<body>
+
+  <div class="header">
+    <h1>&#x1f32c; Air Station</h1>
+    <div class="status">
+      <span class="dot" id="statusDot"></span>
+      <span id="statusText">Đang kết nối Firebase...</span>
+    </div>
+  </div>
+
+  <div class="overall">
+    <div>
+      <div class="label">Chất lượng tổng thể</div>
+      <div class="level-text" id="overallText">—</div>
+    </div>
+    <div class="level-bar">
+      <div class="level-fill" id="overallBar" style="width:0%"></div>
+    </div>
+  </div>
+
+  <div class="ai-section">
+    <div class="ai-title">
+      <span>🤖 AI Phân Tích & Khuyến Cáo</span>
+      <span class="ai-status-text" id="aiStatus">Đang chờ tín hiệu...</span>
+    </div>
+    <div class="color-line">
+      <div class="indicator" id="aiIndicator"></div>
+    </div>
+    <div class="ai-msg" id="aiMessage">Hệ thống sẵn sàng. Nhấn nút bên dưới để yêu cầu AI phân tích không khí hiện tại.</div>
+    <button id="btnAskAI">Phân tích ngay</button>
+  </div>
+
+  <div class="grid">
+    <div class="card" id="cardDust"><div class="name">Bụi mịn (PM)</div><div><span class="value" id="valDust">—</span><span class="unit">µg/m³</span></div><div class="bar"><div class="bar-fill" id="barDust"></div></div></div>
+    <div class="card" id="cardCO"><div class="name">CO</div><div><span class="value" id="valCO">—</span><span class="unit">ppm</span></div><div class="bar"><div class="bar-fill" id="barCO"></div></div></div>
+    <div class="card" id="cardLPG"><div class="name">LPG (gas)</div><div><span class="value" id="valLPG">—</span><span class="unit">ppm</span></div><div class="bar"><div class="bar-fill" id="barLPG"></div></div></div>
+    <div class="card" id="cardSmoke"><div class="name">Khói</div><div><span class="value" id="valSmoke">—</span><span class="unit">ppm</span></div><div class="bar"><div class="bar-fill" id="barSmoke"></div></div></div>
+    <div class="card" id="cardCO2"><div class="name">CO₂</div><div><span class="value" id="valCO2">—</span><span class="unit">ppm</span></div><div class="bar"><div class="bar-fill" id="barCO2"></div></div></div>
+    <div class="card" id="cardNH3"><div class="name">NH₃</div><div><span class="value" id="valNH3">—</span><span class="unit">ppm</span></div><div class="bar"><div class="bar-fill" id="barNH3"></div></div></div>
+    <div class="card" id="cardCH4"><div class="name">CH₄ (Methane)</div><div><span class="value" id="valCH4">—</span><span class="unit">ppm</span></div><div class="bar"><div class="bar-fill" id="barCH4"></div></div></div>
+    <div class="card" id="cardH2"><div class="name">H₂ (Hydrogen)</div><div><span class="value" id="valH2">—</span><span class="unit">ppm</span></div><div class="bar"><div class="bar-fill" id="barH2"></div></div></div>
+  </div>
+
+  <div class="footer">Air Station IoT &bull; STM32 + ESP32 + Firebase + Gemini AI</div>
+
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
+    import { getDatabase, ref, onValue } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-database.js";
+
+    /* ---- Firebase config ---- */
+    const app = initializeApp({
+      apiKey:      "AIzaSyDOB54KE4IKiZsEPs0flRsnPcq6oq6XsfY",
+      databaseURL: "https://techrum-43351-default-rtdb.asia-southeast1.firebasedatabase.app/",
+      projectId:   "techrum-43351"
+    });
+    const db = getDatabase(app);
+
+    /* ---- Thông số cấu hình chung ---- */
+    const TH = { dust: [10, 80, 150, 250, 400], co: [80, 220, 380, 500, 700], lpg: [50, 400, 1500, 2500, 4000], smoke: [50, 400, 1500, 2500, 4000], h2: [50, 400, 1500, 2500, 4000], ch4: [50, 400, 1500, 2500, 4000], co2: [50, 400, 1500, 2500, 4000], nh3: [25, 50, 100, 200, 500] };
+    const COLORS = ['#22c55e','#eab308','#f97316','#ef4444','#a855f7'];
+    const LABELS = ['Tốt','Trung bình','Kém','Xấu','Nguy hiểm'];
+
+    function getLevel(val, thresholds) { for (let i = 0; i < thresholds.length - 1; i++) if (val < thresholds[i]) return i; return 4; }
+    function colorForLevel(lv) { return COLORS[Math.min(lv, 4)]; }
+    function barPercent(val, max) { return Math.min(val / max * 100, 100); }
+
+    function updateCard(id, val, key) {
+      const el = document.getElementById('val' + id), bar = document.getElementById('bar' + id);
+      const th = TH[key], lv = getLevel(val, th), col = colorForLevel(lv), pct = barPercent(val, th[th.length - 1]);
+      el.textContent = val.toFixed(1); el.style.color = col;
+      bar.style.width = pct + '%'; bar.style.background = col;
+    }
+
+    function updateOverall(level) {
+      const lv = Math.max(0, Math.min(level - 1, 4)), txt = document.getElementById('overallText'), bar = document.getElementById('overallBar'), col = colorForLevel(lv);
+      txt.textContent = LABELS[lv]; txt.style.color = col; bar.style.width = ((lv + 1) * 20) + '%'; bar.style.background = col;
+    }
+
+    /* =========================================
+       LOGIC GỌI GEMINI AI (QUA PROXY)
+    ========================================= */
+    // API key KHÔNG còn nằm ở đây — chỉ lưu trong proxy.py phía server
+    let lastAiCallTime = 0;
+
+    async function analyzeWithAI(data) {
+      const now = Date.now();
+      // Giới hạn chống spam nút (60 giây, lưu localStorage để reload không reset)
+      const saved = parseInt(localStorage.getItem('lastAiCall') || '0');
+      const latest = Math.max(saved, lastAiCallTime);
+      if (now - latest < 60000) {
+        const timeLeft = Math.ceil((60000 - (now - latest)) / 1000);
+        document.getElementById('aiStatus').innerText = `Thử lại sau ${timeLeft}s`;
+        return;
+      }
+      lastAiCallTime = now;
+      localStorage.setItem('lastAiCall', String(now));
+
+      document.getElementById('aiStatus').innerText = "Đang phân tích...";
+
+      const prompt = `Bạn là chuyên gia phân tích chất lượng không khí cho hệ thống IoT "Air Station".
+
+DỮ LIỆU CẢM BIẾN HIỆN TẠI:
+- Bụi mịn (PM): ${data.dust} µg/m³
+- CO: ${data.co} ppm
+- Khói: ${data.smoke} ppm
+- CO₂: ${data.co2} ppm
+- LPG (gas): ${data.lpg} ppm
+
+NGƯỠNG THAM CHIẾU (theo WHO & QCVN):
+| Chỉ số | Tốt      | Trung bình | Kém       | Xấu       | Nguy hiểm |
+|--------|----------|------------|-----------|-----------|-----------|
+| Bụi PM | <12      | 12-35      | 35-55     | 55-150    | >150      |
+| CO     | <9       | 9-35       | 35-100    | 100-200   | >200      |
+| CO₂    | <800     | 800-1000   | 1000-2000 | 2000-5000 | >5000     |
+| Khói   | <50      | 50-200     | 200-500   | 500-1000  | >1000     |
+| LPG    | <50      | 50-200     | 200-1000  | 1000-2000 | >2000     |
+
+YÊU CẦU:
+1. So sánh TỪNG chỉ số với ngưỡng, xác định chỉ số nào đang xấu nhất.
+2. Cho điểm nguy hiểm "score" từ 0 (rất tốt) đến 100 (cực kỳ nguy hiểm).
+3. Viết "message" bằng tiếng Việt, 2-3 câu, bao gồm:
+   - Nêu rõ chỉ số nào đang bất thường (nếu có) và mức cụ thể.
+   - Lời khuyên hành động thiết thực (mở cửa, bật quạt, di tản, kiểm tra rò rỉ gas...).
+   - Nếu tất cả tốt thì khen và khuyên duy trì.
+
+Trả về DUY NHẤT một JSON, KHÔNG markdown, KHÔNG ký tự thừa:
+{"score": 25, "message": "Nội dung phân tích ở đây"}`;
+
+      try {
+        // Gọi qua proxy server thay vì gọi thẳng Google
+        const response = await fetch('/ai', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ prompt: prompt })
+        });
+
+        const result = await response.json();
+
+        if (!result.ok) {
+          console.error("Lỗi API từ Proxy:", result.error);
+          document.getElementById('aiStatus').innerText = "Lỗi API — xem Console";
+          return;
+        }
+
+        let textResponse = result.text;
+
+        const jsonStart = textResponse.indexOf('{');
+        const jsonEnd = textResponse.lastIndexOf('}');
+
+        if (jsonStart === -1 || jsonEnd === -1) throw new Error("AI không trả về chuẩn JSON");
+
+        textResponse = textResponse.substring(jsonStart, jsonEnd + 1);
+        const aiData = JSON.parse(textResponse);
+
+        document.getElementById('aiIndicator').style.left = Math.min(Math.max(aiData.score, 0), 100) + '%';
+        document.getElementById('aiMessage').innerText = aiData.message;
+        document.getElementById('aiStatus').innerText = "Đã cập nhật";
+
+      } catch (error) {
+        console.error("Chi tiết lỗi JS:", error);
+        document.getElementById('aiStatus').innerText = "Lỗi xử lý dữ liệu";
+      }
+    }
+
+    /* ---- Lắng nghe Firebase ---- */
+    const dataRef = ref(db, 'air_station');
+
+    onValue(dataRef, (snapshot) => {
+      const d = snapshot.val();
+      if (!d) {
+        document.getElementById('statusText').textContent = 'Đã kết nối — Hệ thống trống';
+        return;
+      }
+
+      document.getElementById('statusText').textContent = 'Cập nhật lúc ' + new Date().toLocaleTimeString('vi-VN');
+
+      updateCard('Dust',  d.dust  || 0, 'dust');
+      updateCard('CO',    d.co    || 0, 'co');
+      updateCard('LPG',   d.lpg   || 0, 'lpg');
+      updateCard('Smoke', d.smoke || 0, 'smoke');
+      updateCard('CO2',   d.co2   || 0, 'co2');
+      updateCard('NH3',   d.nh3   || 0, 'nh3');
+      updateCard('CH4',   d.ch4   || 0, 'ch4');
+      updateCard('H2',    d.h2    || 0, 'h2');
+
+      updateOverall(d.level || 1);
+    });
+
+    /* ---- Bắt sự kiện click nút để gọi AI ---- */
+    document.getElementById('btnAskAI').addEventListener('click', () => {
+      const currentData = {
+        dust: parseFloat(document.getElementById('valDust').textContent) || 0,
+        co: parseFloat(document.getElementById('valCO').textContent) || 0,
+        lpg: parseFloat(document.getElementById('valLPG').textContent) || 0,
+        smoke: parseFloat(document.getElementById('valSmoke').textContent) || 0,
+        co2: parseFloat(document.getElementById('valCO2').textContent) || 0
+      };
+      analyzeWithAI(currentData);
+    });
+  </script>
+</body>
+</html>
